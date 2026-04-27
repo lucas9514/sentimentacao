@@ -1,0 +1,21 @@
+RELATÓRIO DE SENTIMENTAÇÃO
+==================================================
+
+Total de comentários analisados: 10000
+
+DISTRIBUIÇÃO DE SENTIMENTOS
+--------------------------------------------------
+Positivos: 3391 (33.91%)
+Neutros: 3293 (32.93%)
+Negativos: 3316 (33.16%)
+
+CLASSIFICAÇÃO DE RISCO: MÉDIO ⚠️
+
+RESUMO EXECUTIVO
+--------------------------------------------------
+A percepção do público é majoritariamente positiva, indicando boa aceitação da campanha.
+
+PERFORMANCE
+--------------------------------------------------
+Tempo total de execução: 123.97 segundos
+Tempo médio por comentário: 0.0124 segundos

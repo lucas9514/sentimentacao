@@ -1,0 +1,9 @@
+RESUMO EXECUTIVO DA SENTIMENTAÇÃO
+========================================
+Total de comentários: 10000
+Positivos: 3256 (32.56%)
+Neutros: 3339 (33.39%)
+Negativos: 3405 (34.05%)
+Tempo total de execução: 116.21 segundos
+Tempo médio por comentário: 0.0116 segundos
+Resumo executivo: O público reagiu de forma majoritariamente negativa.
