@@ -7,7 +7,13 @@ from io import BytesIO
 from datetime import datetime
 
 import pandas as pd
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ModuleNotFoundError:
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "matplotlib==3.9.4"])
+    import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, FancyBboxPatch
 import streamlit as st
 import requests
