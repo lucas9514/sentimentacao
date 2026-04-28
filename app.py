@@ -1708,6 +1708,7 @@ with aba_cliente:
                 key="top_neg_csv_cliente"
             )
             iniciar_csv = st.button("🚀 Iniciar análise CSV", key="btn_csv_cliente")
+            st.plotly_chart(grafico_demo_plotly())
             iniciar_link = False
             url_publicacao = ""
         else:
@@ -1895,3 +1896,21 @@ with aba_fhits:
         )
     else:
         st.info("Cole vários links, um por linha, e clique em **Gerar relatório FHITS**. Para apresentação, mantenha o modo demo ativo.")
+        def grafico_demo_plotly():
+    import plotly.graph_objects as go
+
+    labels = ['Positivos', 'Negativos']
+    values = [870, 130]
+
+    fig = go.Figure(data=[go.Pie(
+        labels=labels,
+        values=values,
+        hole=0.6
+    )])
+
+    fig.update_layout(
+        title="Distribuição de Sentimentos",
+        height=400
+    )
+
+    return fig
