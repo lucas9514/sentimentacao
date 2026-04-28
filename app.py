@@ -712,6 +712,7 @@ def validar_url_publicacao(url):
 
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
 def buscar_comentarios_apify(lista_links, plataforma, limite_comentarios=APIFY_RESULTS_LIMIT):
     if not APIFY_TOKEN or APIFY_TOKEN == "COLE API KEY AQUI":
         st.error("Configure seu APIFY_TOKEN no início do arquivo app.py, no campo COLE API KEY AQUI.")
@@ -947,6 +948,87 @@ def consolidar_multiplos_links(lista_links):
     if not dfs:
         return pd.DataFrame(columns=["comentario"])
     return pd.concat(dfs, ignore_index=True)
+
+
+# =========================================================
+# MODO DEMO / APRESENTAÇÃO FHITS
+# =========================================================
+def gerar_dataframe_demo_fhits(qtd_links=7, plataforma="Instagram"):
+    """
+    Gera uma base visual e estável para apresentação executiva.
+    Não consulta a Apify e não depende de internet.
+    Mantém o mesmo formato do dataframe real para reutilizar o relatório FHITS.
+    """
+    comentarios_positivos = [
+        "Amei essa campanha! Ficou incrível 💚👏",
+        "Muito bom! Parabéns pelo trabalho da equipe 👏",
+        "Conteúdo sensacional, super criativo e relevante!",
+        "Marca mandando muito bem dessa vez! 👏👏",
+        "Achei a comunicação clara, moderna e muito bonita.",
+        "Campanha muito bem construída, adorei o conceito.",
+        "Que entrega linda! Super alinhada com o público.",
+        "Gostei muito da proposta, ficou leve e verdadeira.",
+        "Excelente publicação, bem feita e muito profissional.",
+        "A marca conseguiu conversar muito bem com a audiência."
+    ]
+
+    comentarios_negativos = [
+        "Péssimo, propaganda enganosa.",
+        "Não gostei, esperava mais da marca.",
+        "Muito ruim, não compro mais.",
+        "Decepcionante. Campanha sem sentido.",
+        "Achei confuso e pouco transparente.",
+        "Esperava uma comunicação melhor sobre o produto.",
+        "A qualidade apresentada não corresponde ao prometido.",
+        "Demoraram para responder e isso prejudicou a experiência.",
+        "Não recomendo, faltou clareza na comunicação.",
+        "Fiquei frustrado com o resultado apresentado."
+    ]
+
+    usuarios_positivos = [
+        "larissamartins", "gustavo.souza", "marianacosta", "joaovictor.r",
+        "camila.brandao", "rafael.moraes", "beatriz.lima", "paula.andrade"
+    ]
+
+    usuarios_negativos = [
+        "rodrigues83", "suellen.moraes", "felipe_santos", "bia.almeida",
+        "marcos.r", "aline.costa", "pedro_f", "renata.souza"
+    ]
+
+    linhas = []
+
+    # Base demo: 1.000 comentários, sendo 870 positivos/neutros e 130 negativos.
+    for i in range(870):
+        linhas.append({
+            "comentario": comentarios_positivos[i % len(comentarios_positivos)],
+            "label_modelo": "5 stars",
+            "sentimento": "Positivo/Neutro",
+            "confianca": 0.98,
+            "usuario": usuarios_positivos[i % len(usuarios_positivos)],
+            "curtidas_comentario": [28, 15, 31, 12, 44, 19, 23, 36][i % 8],
+            "url_publicacao": f"demo://{plataforma.lower()}/post-{(i % max(qtd_links, 1)) + 1}",
+            "url_comentario": f"demo://comentario-positivo-{i + 1}",
+            "data_comentario": "2026-04-28T12:00:00.000Z",
+            "plataforma": plataforma,
+            "modo": "demo_fhits"
+        })
+
+    for i in range(130):
+        linhas.append({
+            "comentario": comentarios_negativos[i % len(comentarios_negativos)],
+            "label_modelo": "1 star",
+            "sentimento": "Negativo",
+            "confianca": 0.96,
+            "usuario": usuarios_negativos[i % len(usuarios_negativos)],
+            "curtidas_comentario": [3, 2, 4, 1, 7, 5, 6, 2][i % 8],
+            "url_publicacao": f"demo://{plataforma.lower()}/post-{(i % max(qtd_links, 1)) + 1}",
+            "url_comentario": f"demo://comentario-negativo-{i + 1}",
+            "data_comentario": "2026-04-28T12:00:00.000Z",
+            "plataforma": plataforma,
+            "modo": "demo_fhits"
+        })
+
+    return pd.DataFrame(linhas)
 
 
 def gerar_nome_usuario_fake(indice, sentimento):
@@ -1353,16 +1435,6 @@ def gerar_png_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
     return buffer.getvalue()
 
 
-# =========================================================
-# SOBRESCRITA SEGURA PARA DEPLOY SEM MATPLOTLIB
-# =========================================================
-def gerar_grafico_pizza_relatorio(positivos, negativos):
-    # Mantém o mesmo nome usado no relatório FHITS,
-    # mas agora usa Plotly em vez de matplotlib.
-    return gerar_grafico_donut(positivos, negativos)
-
-
-
 def renderizar_dashboard_cliente(resultado_df, tempo_total, tempo_medio, quantidade_top_negativos=5):
     total = len(resultado_df)
     positivos = len(resultado_df[resultado_df["sentimento"] == "Positivo/Neutro"])
@@ -1507,7 +1579,7 @@ def renderizar_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
 
     with main_left:
         fig_relatorio = gerar_grafico_pizza_relatorio(positivos, negativos)
-        st.plotly_chart(fig_relatorio, use_container_width=True)
+        st.pyplot(fig_relatorio, use_container_width=True)
         total_sentimentos = positivos + negativos
         pct_pos = (positivos / total_sentimentos * 100) if total_sentimentos else 0
         pct_neg = (negativos / total_sentimentos * 100) if total_sentimentos else 0
@@ -1602,6 +1674,11 @@ def renderizar_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
     csv_exportacao = resultado_df[["comentario", "label_modelo", "sentimento"]].to_csv(
         index=False
     ).encode("utf-8-sig")
+    png_exportacao = gerar_png_relatorio_fhits(
+        resultado_df=resultado_df,
+        qtd_links=qtd_links,
+        plataforma=plataforma
+    )
 
     st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
     st.download_button(
@@ -1610,6 +1687,14 @@ def renderizar_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
         file_name="resultado_sentimentacao_fhits.csv",
         mime="text/csv",
         key="download_fhits_csv"
+    )
+
+    st.download_button(
+        label="Exportar relatorio PNG",
+        data=png_exportacao,
+        file_name=f"relatorio_sentimentacao_fhits_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
+        mime="image/png",
+        key="download_fhits_png"
     )
 
 
@@ -1780,6 +1865,12 @@ with aba_fhits:
             options=["Instagram", "TikTok", "YouTube"],
             key="plataforma_fhits"
         )
+        modo_demo_fhits = st.checkbox(
+            "Modo demo/apresentação",
+            value=True,
+            key="modo_demo_fhits",
+            help="Gera um relatório visual sem consultar a Apify. Ideal para apresentação em rede instável."
+        )
 
     with c2:
         links_multiplos = st.text_area(
@@ -1795,26 +1886,41 @@ with aba_fhits:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
+    if modo_demo_fhits:
+        st.info("Modo demo ativo: o relatório FHITS será gerado com dados simulados, sem depender da internet ou da Apify.")
+
     if iniciar_fhits:
         lista_links = [linha.strip() for linha in links_multiplos.split("\n") if linha.strip()]
+
+        if modo_demo_fhits and not lista_links:
+            lista_links = [f"demo-post-{i}" for i in range(1, 8)]
 
         if not lista_links:
             st.warning("Cole pelo menos um link para continuar.")
             st.stop()
 
-        urls_invalidas = [url for url in lista_links if not validar_url_publicacao(url)]
-        if urls_invalidas:
-            st.error("Uma ou mais URLs parecem inválidas. Revise os links informados.")
-            st.stop()
+        if not modo_demo_fhits:
+            urls_invalidas = [url for url in lista_links if not validar_url_publicacao(url)]
+            if urls_invalidas:
+                st.error("Uma ou mais URLs parecem inválidas. Revise os links informados.")
+                st.stop()
 
-        with st.spinner("Consultando a Apify e consolidando as publicações..."):
-            resultado_df_fhits, respostas_backend = analisar_multiplos_links_backend(
-                lista_links=lista_links,
-                plataforma=plataforma_fhits
-            )
+        if modo_demo_fhits:
+            with st.spinner("Gerando relatório FHITS em modo demo/apresentação..."):
+                time.sleep(0.8)
+                resultado_df_fhits = gerar_dataframe_demo_fhits(
+                    qtd_links=len(lista_links),
+                    plataforma=plataforma_fhits
+                )
+        else:
+            with st.spinner("Consultando a Apify e consolidando as publicações..."):
+                resultado_df_fhits, respostas_backend = analisar_multiplos_links_backend(
+                    lista_links=lista_links,
+                    plataforma=plataforma_fhits
+                )
 
-        if resultado_df_fhits is None:
-            st.stop()
+            if resultado_df_fhits is None:
+                st.stop()
 
         if resultado_df_fhits.empty:
             st.warning("Nenhum comentário válido foi encontrado.")
@@ -1826,4 +1932,4 @@ with aba_fhits:
             plataforma=plataforma_fhits
         )
     else:
-        st.info("Cole vários links, um por linha, e clique em **Gerar relatório FHITS**.")
+        st.info("Cole vários links, um por linha, e clique em **Gerar relatório FHITS**. Para apresentação, mantenha o modo demo ativo.")
