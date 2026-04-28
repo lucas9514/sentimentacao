@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 import requests
 from transformers import pipeline
-
+import plotly.graph_objects as go
 # =========================================================
 # CONFIGURAÇÃO DA PÁGINA
 # =========================================================
@@ -642,24 +642,26 @@ def preparar_top_positivos(df, quantidade_top=4):
 
 
 def gerar_grafico_donut(positivos, negativos):
-    fig, ax = plt.subplots(figsize=(3.2, 3.2), facecolor="#FFFFFF")
-    valores = [positivos, negativos]
-    cores = ["#67B26F", "#E25555"]
-
-    ax.pie(
-        valores,
-        labels=None,
-        colors=cores,
-        autopct="%1.1f%%",
-        startangle=90,
-        counterclock=False,
-        wedgeprops=dict(width=0.42, edgecolor="white"),
-        pctdistance=0.78,
-        textprops=dict(color="white", fontsize=10, fontweight="bold")
+    fig = go.Figure(
+        data=[
+            go.Pie(
+                labels=["Positivo/Neutro", "Negativo"],
+                values=[positivos, negativos],
+                hole=0.55,
+                marker=dict(colors=["#67B26F", "#E25555"]),
+                textinfo="percent",
+                textfont=dict(color="white", size=16),
+                sort=False
+            )
+        ]
     )
 
-    ax.axis("equal")
-    plt.tight_layout()
+    fig.update_layout(
+        showlegend=False,
+        margin=dict(t=10, b=10, l=10, r=10),
+        height=330
+    )
+
     return fig
 
 
@@ -1414,7 +1416,7 @@ def renderizar_dashboard_cliente(resultado_df, tempo_total, tempo_medio, quantid
         st.markdown('<div class="chart-box">', unsafe_allow_html=True)
         st.markdown('<div class="section-title">Distribuição dos sentimentos</div>', unsafe_allow_html=True)
         fig = gerar_grafico_donut(positivos, negativos)
-        st.pyplot(fig)
+        st.plotly_chart(fig, use_container_width=True)
         st.markdown(
             f"""
             <div style="margin-top:8px; font-size:14px; line-height:1.8;">
