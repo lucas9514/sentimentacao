@@ -1353,6 +1353,16 @@ def gerar_png_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
     return buffer.getvalue()
 
 
+# =========================================================
+# SOBRESCRITA SEGURA PARA DEPLOY SEM MATPLOTLIB
+# =========================================================
+def gerar_grafico_pizza_relatorio(positivos, negativos):
+    # Mantém o mesmo nome usado no relatório FHITS,
+    # mas agora usa Plotly em vez de matplotlib.
+    return gerar_grafico_donut(positivos, negativos)
+
+
+
 def renderizar_dashboard_cliente(resultado_df, tempo_total, tempo_medio, quantidade_top_negativos=5):
     total = len(resultado_df)
     positivos = len(resultado_df[resultado_df["sentimento"] == "Positivo/Neutro"])
@@ -1497,7 +1507,7 @@ def renderizar_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
 
     with main_left:
         fig_relatorio = gerar_grafico_pizza_relatorio(positivos, negativos)
-        st.pyplot(fig_relatorio, use_container_width=True)
+        st.plotly_chart(fig_relatorio, use_container_width=True)
         total_sentimentos = positivos + negativos
         pct_pos = (positivos / total_sentimentos * 100) if total_sentimentos else 0
         pct_neg = (negativos / total_sentimentos * 100) if total_sentimentos else 0
@@ -1592,11 +1602,6 @@ def renderizar_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
     csv_exportacao = resultado_df[["comentario", "label_modelo", "sentimento"]].to_csv(
         index=False
     ).encode("utf-8-sig")
-    png_exportacao = gerar_png_relatorio_fhits(
-        resultado_df=resultado_df,
-        qtd_links=qtd_links,
-        plataforma=plataforma
-    )
 
     st.markdown("<div style='height:10px;'></div>", unsafe_allow_html=True)
     st.download_button(
@@ -1605,14 +1610,6 @@ def renderizar_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
         file_name="resultado_sentimentacao_fhits.csv",
         mime="text/csv",
         key="download_fhits_csv"
-    )
-
-    st.download_button(
-        label="Exportar relatorio PNG",
-        data=png_exportacao,
-        file_name=f"relatorio_sentimentacao_fhits_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png",
-        mime="image/png",
-        key="download_fhits_png"
     )
 
 
