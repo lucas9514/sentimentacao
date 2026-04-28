@@ -666,44 +666,7 @@ def gerar_grafico_donut(positivos, negativos):
 
 
 def gerar_grafico_pizza_relatorio(positivos, negativos):
-    fig, ax = plt.subplots(figsize=(5.8, 5.8), facecolor="#FFFFFF")
-    valores = [positivos, negativos]
-    cores = ["#34C759", "#EF3F3F"]
-
-    if positivos + negativos == 0:
-        valores = [1]
-        cores = ["#D9D9D9"]
-
-    wedges, _, _ = ax.pie(
-        valores,
-        labels=None,
-        colors=cores,
-        autopct="%1.1f%%" if positivos + negativos > 0 else "",
-        startangle=90,
-        counterclock=False,
-        textprops=dict(color="white", fontsize=14, fontweight="bold"),
-        wedgeprops=dict(edgecolor="white", linewidth=1.2)
-    )
-
-    ax.axis("equal")
-
-    legend_labels = ["Positivos / Neutros", "Negativos"] if positivos + negativos > 0 else ["Sem dados"]
-
-    ax.legend(
-        wedges,
-        legend_labels,
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.02),
-        ncol=2,
-        frameon=False,
-        fontsize=11,
-        handlelength=1.1,
-        handletextpad=0.4,
-        columnspacing=1.0
-    )
-
-    plt.tight_layout()
-    return fig
+    return gerar_grafico_donut(positivos, negativos)
 
 
 def validar_url_publicacao(url):
@@ -1105,7 +1068,9 @@ def _desenhar_card_comentario_png(
     avatar_desenhado = False
     if avatar_path is not None:
         try:
-            avatar_img = plt.imread(avatar_path)
+            from PIL import Image
+
+avatar_img = Image.open(avatar_path)
             avatar_plot = ax.imshow(
                 avatar_img,
                 extent=(
@@ -1236,8 +1201,7 @@ def gerar_png_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
     top_negativos_df = preparar_top_negativos(resultado_df, quantidade_top=4)
     top_positivos_df = preparar_top_positivos(resultado_df, quantidade_top=4)
 
-    fig = plt.figure(figsize=(16, 9), dpi=150, facecolor="#FFFFFF")
-    ax = fig.add_axes([0, 0, 1, 1])
+fig = gerar_grafico_donut(positivos, negativos)    ax = fig.add_axes([0, 0, 1, 1])
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
@@ -1430,7 +1394,6 @@ def gerar_png_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
 
     buffer = BytesIO()
     fig.savefig(buffer, format="png", dpi=150, facecolor=fig.get_facecolor())
-    plt.close(fig)
     buffer.seek(0)
     return buffer.getvalue()
 
@@ -1579,8 +1542,7 @@ def renderizar_relatorio_fhits(resultado_df, qtd_links, plataforma="Instagram"):
 
     with main_left:
         fig_relatorio = gerar_grafico_pizza_relatorio(positivos, negativos)
-        st.pyplot(fig_relatorio, use_container_width=True)
-        total_sentimentos = positivos + negativos
+st.plotly_chart(fig_relatorio, use_container_width=True)        total_sentimentos = positivos + negativos
         pct_pos = (positivos / total_sentimentos * 100) if total_sentimentos else 0
         pct_neg = (negativos / total_sentimentos * 100) if total_sentimentos else 0
         st.markdown(
